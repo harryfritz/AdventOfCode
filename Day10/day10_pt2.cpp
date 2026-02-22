@@ -102,6 +102,67 @@ vector <int> sysSolution(vector <vector <int>>& A, vector <int>& B){
 
 }
 
+void interchangeRows(vector <vector <int>>& M, int row1, int row2){
+    vector <int> row2Arr = M[row2];
+
+    M[row2] = M[row1];
+    M[row1] = row2Arr;
+}
+
+void addSubTwoRows(vector <vector <int>>& M, int row1, int row2, bool add){
+    if(add){
+        for(int i = 0; i < M[row1].size(); i++){
+            M[row1][i] += M[row2][i];
+        }
+    } else {
+        for(int i = 0; i < M[row1].size(); i++){
+            M[row1][i] -= M[row2][i];
+        }
+    }
+}
+
+void multRowbyConstant(vector <vector <int>>& M, int row, int k){
+    for(int i = 0; i < M[row].size(); i++){
+        M[row][i] *= k;
+    }
+}
+
+void rowEchelon(vector <vector <int>> A, vector <int> B){
+
+    for(int i = 0; i < A.size(); i++){
+        A[i].push_back(B[i]);
+    }
+    
+    
+    for(int i = 0; A[0][1] == 0; i++){
+        interchangeRows(A, 0, i);
+    }
+    if(A[0][1] != 1){
+        for(int j = 0; j < A[0].size(); j++){
+            
+        }
+    }
+    
+    if(A[0][1] != 0){
+
+    } else {
+
+    }
+    
+    
+    for(int j = 0; j < A[0].size() - 1; j++){
+        if(A[0][1]);
+    }
+    
+    
+    
+    //Interchange 2 rows
+
+    //Add two rows together
+
+    //Multiply row by Constant
+}
+
 int main() {
   
     ifstream file;
