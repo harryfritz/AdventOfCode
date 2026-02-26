@@ -16,6 +16,96 @@
 
 using namespace std; 
 
+class Fraction {
+
+    private:
+        int mdc(int n, int d) const {
+            if(n < 0){
+                n = -n;
+            }
+            if(d < 0){
+                d = -d;
+            }
+            if(n < d){
+                int x = n;
+                n = d;
+                d = x;
+            }
+
+            vector <int> euclid = {n, d};
+            for(int i = 1; euclid[i] != 0; i++){
+                euclid.push_back(euclid[i-1] % euclid[i]);
+            }
+
+            return euclid[euclid.size() - 2];
+        }
+
+        Fraction simplify(const Fraction& x) const {
+            int newNum = x.num;
+            int newDen = x.den;
+
+            int max = mdc(newNum, newDen);
+            while(max > 1){
+                newNum = newNum / max;
+                newDen = newDen / max;
+                max = mdc(newNum, newDen);
+            }
+
+            if(newNum == newDen){
+                return Fraction(1,1);
+            } else if(newNum == 0){
+                return Fraction(0,1);
+            } else if(newDen < 0){
+                return Fraction(-newNum, -newDen);
+            } else {
+                return Fraction(newNum, newDen);
+            }
+        }
+
+    public:
+        int num;
+        int den;
+
+        Fraction(int n, int d) : num(n), den(d) {}
+
+        Fraction add(const Fraction& another) const {
+            int newNum = num * another.den + den * another.num;
+            int newDen = den * another.den;
+
+            return simplify(Fraction(newNum, newDen));
+        }
+
+        Fraction sub(const Fraction& another) const {
+            int newNum = num * another.den - den * another.num;
+            int newDen = den * another.den;
+
+            return simplify(Fraction(newNum, newDen));
+        }
+
+        Fraction mult(const Fraction& another) const {
+            int newNum = num * another.num;
+            int newDen = den * another.den;
+
+            return simplify(Fraction(newNum, newDen));
+        }
+
+        Fraction div(const Fraction& another) const {
+            int newNum = num * another.den;
+            int newDen = den * another.num;
+
+            return simplify(Fraction(newNum, newDen));
+        }
+
+        string show(){
+            if(den == 1){
+                return to_string(num);
+            } else {
+                return to_string(num) + "/" + to_string(den);
+            }
+        }
+
+};
+
 bool isBtnCombCorrect(vector <int>& btnComb, vector <vector <int>>& buttons, vector <int>& joltages){
 
     vector <int> joltagesTry;
@@ -59,6 +149,23 @@ void combinationUtil(vector <vector <int>>& machine, int ind, int r,
     }
 }
 
+void printMatrix(string name, vector <vector <Fraction>>& M){
+    cout << "\n" << name << ": ";
+    for(vector <Fraction> row : M){
+        for(Fraction m : row){
+            cout << "\t" << m.show();
+        }
+        cout << "\n";
+    }
+}
+
+void printArray(string name, vector <Fraction>& V){
+    cout << "\n" << name << ": ";
+    for(Fraction m : V){
+        cout << "\t" << m.show();
+    }
+}
+
 int determinant(vector <vector <int>>& matrix){
 
     if(matrix.size() == 2){
@@ -85,7 +192,21 @@ int determinant(vector <vector <int>>& matrix){
 
 }
 
-vector <int> sysSolution(vector <vector <int>>& A, vector <int>& B){
+void transpose(vector <vector <int>>& M){
+    for(int i = 0; i < M.size(); i++){
+        for(int j = 0; j < i; j++){
+            int x = M[i][j];
+            M[i][j] = M[j][i];
+            M[j][i] = x;
+        }
+    }
+}
+
+Fraction itof(int i){
+    return Fraction(i,1);
+}
+
+vector <int> cramerSolve(vector <vector <int>>& A, vector <int>& B){
     vector <int> X;
 
     int detA = determinant(A);
@@ -102,65 +223,120 @@ vector <int> sysSolution(vector <vector <int>>& A, vector <int>& B){
 
 }
 
-void interchangeRows(vector <vector <int>>& M, int row1, int row2){
-    vector <int> row2Arr = M[row2];
-
-    M[row2] = M[row1];
-    M[row1] = row2Arr;
+void interchangeRows(vector <Fraction>& row1, vector <Fraction>& row2){
+    vector <Fraction> rowBuff = row2;
+    row2 = row1;
+    row1 = rowBuff;
 }
 
-void addSubTwoRows(vector <vector <int>>& M, int row1, int row2, bool add){
+void addSubTwoRows(vector <Fraction>& row1, vector <Fraction> row2, bool add){
     if(add){
-        for(int i = 0; i < M[row1].size(); i++){
-            M[row1][i] += M[row2][i];
+        for(int i = 0; i < row1.size(); i++){
+            row1[i] = row1[i].add(row2[i]);
         }
     } else {
-        for(int i = 0; i < M[row1].size(); i++){
-            M[row1][i] -= M[row2][i];
+        for(int i = 0; i < row1.size(); i++){
+            row1[i] = row1[i].sub(row2[i]);
         }
     }
 }
 
-void multRowbyConstant(vector <vector <int>>& M, int row, int k){
-    for(int i = 0; i < M[row].size(); i++){
-        M[row][i] *= k;
+vector <Fraction> multRowbyConstant(vector <Fraction> row, Fraction k){
+    for(int i = 0; i < row.size(); i++){
+        row[i] = row[i].mult(k);
     }
+    return row;
 }
 
-void rowEchelon(vector <vector <int>> A, vector <int> B){
+void rowEchelon(vector <vector <Fraction>>& A, vector <Fraction>& B){
 
+    printMatrix("A", A);
+
+    //Build extended Matrix
     for(int i = 0; i < A.size(); i++){
         A[i].push_back(B[i]);
     }
     
+    printMatrix("A", A);
     
-    for(int i = 0; A[0][1] == 0; i++){
-        interchangeRows(A, 0, i);
+    for(int col = 0; col < A[0].size() - 1; col++){
+
+        //Make sure A[col][col] = 1
+        for(int i = col + 1; A[col][col].num == 0 && i < A.size(); i++){
+            if(A[i][col].num != 0){
+                interchangeRows(A[col], A[i]);
+            }
+        }
+        for(int i = col + 1; A[col][col].num != A[col][col].den && i < A.size(); i++){
+            if(A[i][col].num == A[i][col].den){
+                interchangeRows(A[col], A[i]);
+            }
+        }
+        if(A[col][col].num == 0){
+
+            //Pivot!
+            cout << "\nPIVOT!";
+        } else if(A[col][col].num != A[col][col].den){
+            A[col] = multRowbyConstant(A[col], Fraction(1,1).div(A[col][col]));
+        }
+        printMatrix("A", A);
+
+        //Elimination
+        for(int i = col + 1; i < A.size(); i++){
+            if(A[i][col].num != 0){
+                addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col].mult(Fraction(-1,1))), true);
+            }
+        }
+        printMatrix("A", A);
     }
-    if(A[0][1] != 1){
-        for(int j = 0; j < A[0].size(); j++){
-            
+}
+
+vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, vector <Fraction> B){
+    vector <vector <Fraction>> X;
+
+    rowEchelon(A, B);
+
+    cout << "\nGauss Elimination";
+
+    for(int col = A[0].size() - 2; col >= 0; col--){
+        //Backwards Elimination - UP
+        for(int i = col - 1; i >= 0; i--){
+            if(A[i][col].num != 0){
+                addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col].mult(Fraction(-1,1))), true);
+            }
+        }
+        printMatrix("A", A);
+    }
+
+    for(int i = 0; i < A.size(); i++){
+        X.push_back({A[i][A[i].size() - 1]});
+    }
+
+    vector <int> pivots;
+    for(int i = 0; i < A.size(); i++){
+        bool zeroCol = true;
+        for(int j = 0; j < A[i].size() && zeroCol; j++){
+            if(A[i][j].num != 0){
+                zeroCol = false;
+            }
+        }
+        if(zeroCol){
+            pivots.push_back(i);
         }
     }
-    
-    if(A[0][1] != 0){
 
-    } else {
-
+    for(int p : pivots){
+        for(int i = 0; i < A.size(); i++){
+            if(i == p){
+                X[i].push_back(Fraction(1,1));
+            } else {
+                X[i].push_back(A[i][p].mult(Fraction(-1,1)));
+            }
+        }
     }
-    
-    
-    for(int j = 0; j < A[0].size() - 1; j++){
-        if(A[0][1]);
-    }
-    
-    
-    
-    //Interchange 2 rows
 
-    //Add two rows together
+    return X;
 
-    //Multiply row by Constant
 }
 
 int main() {
@@ -206,36 +382,58 @@ int main() {
 
     int machine = 1;
     vector <vector <int>> base;
+
+
+
     
-    
-    
+    vector <vector <Fraction>> A = {{Fraction(1,1) , Fraction(0,1) , Fraction(1,1) , Fraction(1,1) , Fraction(0,1)},
+                                    {Fraction(0,1) , Fraction(0,1) , Fraction(0,1) , Fraction(1,1) , Fraction(1,1)},
+                                    {Fraction(1,1) , Fraction(1,1) , Fraction(0,1) , Fraction(1,1) , Fraction(1,1)},
+                                    {Fraction(1,1) , Fraction(1,1) , Fraction(0,1) , Fraction(0,1) , Fraction(1,1)},
+                                    {Fraction(1,1) , Fraction(0,1) , Fraction(1,1) , Fraction(0,1) , Fraction(1,1)}};
+
+
+    vector <Fraction> B = {Fraction(7,1) , Fraction(5,1) , Fraction(12,1) , Fraction(7,1) , Fraction(2,1)};
+
+    vector <vector <Fraction>> X;
+    X = gaussEliminationSolve(A, B);
+    printMatrix("X", X);
+
+    Fraction presses(0,0);
+    for(vector <Fraction> row : X){
+        for(Fraction x : row){
+            presses = presses.add(x);
+        }
+    }
+
+    cout << "\nPresses: " + presses.show();
     
     file.close();
     return 0;
     
-    int answer = 0;
-    for(int machine = 0; machine < buttons.size(); machine++){
-        int buttonsPressed = 100000;
-        combinationUtil(buttons[machine], 0, joltages[machine].size(), btnComb, dataArr);
-        for(vector <vector <int>> base : btnComb){
-            if(determinant(base) != 0){
-                vector <int> solution = sysSolution(base, joltages[machine]);
-                int sum = 0;
-                for(int press : solution){
-                    if(press < 0){
-                        sum = 0;
-                        break;
-                    }
-                    sum += press;
-                }
-                if(sum < buttonsPressed){
-                    buttonsPressed = sum;
-                }
-            }
-        }
-        answer += buttonsPressed;
-    }
-    cout << "\n\nAnswer: " << answer;
+    // int answer = 0;
+    // for(int machine = 0; machine < buttons.size(); machine++){
+    //     int buttonsPressed = 100000;
+    //     combinationUtil(buttons[machine], 0, joltages[machine].size(), btnComb, dataArr);
+    //     for(vector <vector <int>> base : btnComb){
+    //         if(determinant(base) != 0){
+    //             vector <int> solution = cramerSolve(base, joltages[machine]);
+    //             int sum = 0;
+    //             for(int press : solution){
+    //                 if(press < 0){
+    //                     sum = 0;
+    //                     break;
+    //                 }
+    //                 sum += press;
+    //             }
+    //             if(sum < buttonsPressed){
+    //                 buttonsPressed = sum;
+    //             }
+    //         }
+    //     }
+    //     answer += buttonsPressed;
+    // }
+    // cout << "\n\nAnswer: " << answer;
 
     // int answer = 0;
     // for(int machine = 0; machine < buttons.size(); machine++){
