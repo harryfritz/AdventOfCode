@@ -173,16 +173,20 @@ void printArray(string name, vector <Fraction>& V){
     }
 }
 
-vector <vector <int>> transpose(vector <vector <int>> M){
-    for(int i = 0; i < M.size(); i++){
-        for(int j = 0; j < i; j++){
-            int x = M[i][j];
-            M[i][j] = M[j][i];
-            M[j][i] = x;
+vector <vector <int>> transpose(vector <vector <int>>& M){
+    
+    int rows = M[0].size();
+    int cols = M.size();
+    
+    vector <vector <int>> tM(rows, vector <int> (cols));
+    
+    for(int i = 0; i < rows; i++){
+        for(int j = 0; j < cols; j++){
+            tM[i][j] = M[j][i];
         }
     }
 
-    return M;
+    return tM;
 }
 
 Fraction itof(int i){
@@ -223,7 +227,6 @@ vector <Fraction> multRowbyConstant(vector <Fraction> row, Fraction k){
 }
 
 vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, vector <Fraction>& B){
-    vector <vector <Fraction>> X;
 
     bool printSteps = true;
 
@@ -232,9 +235,12 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         A[i].push_back(B[i]);
     }
     
-    if(printSteps) printMatrix("A", A);
+    if(printSteps){
+        cout << "\nExtended Matrix";
+        printMatrix("A", A);
+    }
     
-    for(int col = 0; col < A[0].size() - 1; col++){
+    for(int col = 0; col < A.size() - 1; col++){
 
         //Make sure A[col][col] = 1
         for(int i = col + 1; A[col][col].num == 0 && i < A.size(); i++){
@@ -252,7 +258,11 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         } else if(A[col][col].num != A[col][col].den){
             A[col] = multRowbyConstant(A[col], Fraction(1,1).div(A[col][col]));
         }
-        if(printSteps) printMatrix("A", A);
+        
+        if(printSteps){
+            cout << "\nPivoting col " << col;
+            printMatrix("A", A);
+        }
 
         //Elimination
         for(int i = col + 1; i < A.size(); i++){
@@ -260,21 +270,74 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
                 addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col].mult(Fraction(-1,1))), true);
             }
         }
-        if(printSteps) printMatrix("A", A);
+        
+        if(printSteps){
+            cout << "\nElimination col " << col;
+            printMatrix("A", A);
+        }
     }
 
-    for(int col = A[0].size() - 2; col >= 0; col--){
-        //Backwards Elimination - UP
-        for(int i = col - 1; i >= 0; i--){
-            if(A[i][col].num != 0){
-                addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col].mult(Fraction(-1,1))), true);
+    for(int col = A[0].size() - 1; col > 0; col--){
+        int row = col;
+        if(row >= A.size()){
+            row = A.size() - 1;
+        }
+        
+        bool validPivot = true;
+        if(A[row][col].num == 0){
+            validPivot = false;
+        } 
+        for(int i = col - 1; i >= 0 && validPivot; i--){
+            if(A[row][i].num != 0){
+                validPivot = false;
+            } 
+        }        
+        
+        if(validPivot){
+            //Backwards Elimination - UP
+            for(int i = row - 1; i >= 0; i--){
+                if(A[i][col].num != 0){
+                    addSubTwoRows(A[i], multRowbyConstant(A[row], A[i][col].mult(Fraction(-1,1))), true);
+                }
             }
         }
-        if(printSteps) printMatrix("A", A);
+
+        if(printSteps){
+            cout << "\nBackwards Elimination col " << col;
+            printMatrix("A", A);
+        }
     }
 
-    for(int i = 0; i < A.size(); i++){
-        X.push_back({A[i][A[i].size() - 1]});
+    vector <vector <Fraction>> X;
+    
+    for(int col = 0; col < A.size() - 1; col++){
+        bool colPivot = true;
+        
+        
+        
+        
+        if(colPivot){
+
+        } else {
+
+        }
+
+
+
+    }
+    
+    
+    
+    
+    
+    
+    for(int i = 0; i < A[0].size() - 1; i++){
+        if(i < A.size()){
+            X.push_back({A[i][A[i].size() - 1]});
+        } else {
+
+        }
+        
     }
 
     vector <int> pivots;
@@ -346,9 +409,9 @@ int main() {
 
     cout << "\n";
     Fraction answer = Fraction(0,1);
+
     // for(int machine = 0; machine < buttons.size(); machine++){
     for(int machine = 0; machine < 1; machine++){
-        
         
         Fraction totalPresses = Fraction(0,1);
         for(int jolt : joltages[machine]){
@@ -365,16 +428,12 @@ int main() {
         }
         
         vector <vector <Fraction>> btnCombF;
-        if(buttons[machine].size() == buttons[machine][0].size()){
-            vector <vector <int>> transp = transpose(buttons[machine]);
-            for(int i = 0; i < transp.size(); i++){
-                btnCombF.push_back({});
-                for(int j = 0; j < transp[i].size(); j++){
-                    btnCombF[i].push_back(itof(transp[i][j]));
-                }
+        vector <vector <int>> transp = transpose(buttons[machine]);
+        for(int i = 0; i < transp.size(); i++){
+            btnCombF.push_back({});
+            for(int j = 0; j < transp[i].size(); j++){
+                btnCombF[i].push_back(itof(transp[i][j]));
             }
-        } else {
-
         }
         
         vector <Fraction> joltagesF;
@@ -388,12 +447,10 @@ int main() {
         X = gaussEliminationSolve(btnCombF, joltagesF);
         printMatrix("X", X);
 
-        
         vector <Fraction> result;
         for(int i = 0; i < X.size(); i++){
             result.push_back(X[i][0]);
         }
-        
         
         Fraction maxResult = Fraction(0,1);
         for(Fraction f : result){
