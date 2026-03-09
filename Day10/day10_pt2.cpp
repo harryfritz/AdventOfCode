@@ -240,7 +240,7 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         printMatrix("A", A);
     }
     
-    for(int col = 0; col < A.size() - 1; col++){
+    for(int col = 0; col < A.size(); col++){
 
         //Make sure A[col][col] = 1
         for(int i = col + 1; A[col][col].num == 0 && i < A.size(); i++){
@@ -307,60 +307,50 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
             printMatrix("A", A);
         }
     }
-
+    
     vector <vector <Fraction>> X;
-    
-    for(int col = 0; col < A.size() - 1; col++){
-        bool colPivot = true;
-        
-        
-        
-        
-        if(colPivot){
-
-        } else {
-
-        }
-
-
-
-    }
-    
-    
-    
-    
-    
-    
     for(int i = 0; i < A[0].size() - 1; i++){
-        if(i < A.size()){
-            X.push_back({A[i][A[i].size() - 1]});
-        } else {
-
-        }
-        
+        X.push_back({Fraction(0,1)});
     }
 
     vector <int> pivots;
-    for(int i = 0; i < A.size(); i++){
-        bool zeroCol = true;
-        for(int j = 0; j < A[i].size() - 1 && zeroCol; j++){
-            if(A[i][j].num != 0){
-                zeroCol = false;
+    vector <int> nonPivots;
+    for(int col = 0; col < A[0].size() - 1; col++){
+        bool colPivot = true;
+        int pivotPos = -1;
+        
+        for(int i = 0; i < A.size() && colPivot; i++){
+            if(A[i][col].num != 0){
+                if(pivotPos == -1){
+                    pivotPos = i;
+                } else {
+                    colPivot = false;
+                }
+            }
+            if(i == A.size() - 1 && pivotPos == -1){
+                colPivot = false;
             }
         }
-        if(zeroCol){
-            pivots.push_back(i);
-        }
-    }
 
-    for(int p : pivots){
-        for(int i = 0; i < A.size(); i++){
-            if(i == p){
-                X[i].push_back(Fraction(1,1));
-            } else {
-                X[i].push_back(A[i][p].mult(Fraction(-1,1)));
-            }
+        if(colPivot){
+            X[col][0] = A[pivotPos][A[0].size() - 1];
+            pivots.push_back(col);
+        } else {
+            nonPivots.push_back(col);
         }
+
+    }
+    
+    for(int pivot = 0; pivot < nonPivots.size(); pivot++){
+        for(int i = 0; i < X.size(); i++){
+            X[i].push_back(Fraction(0,1));
+        }
+        X[nonPivots[pivot]][pivot + 1] = Fraction(1,1);
+
+        for(int i = 0; i < pivots.size(); i++){
+            X[pivots[i]][pivot + 1] = A[i][nonPivots[pivot]].mult(Fraction(-1,1));
+        }
+
     }
 
     if(printSteps) printMatrix("X", X);
@@ -371,7 +361,7 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
 int main() {
   
     ifstream file;
-    file.open("example.txt");
+    file.open("input.txt");
     string input;
 
     vector <vector <int>> joltages;
@@ -411,7 +401,7 @@ int main() {
     Fraction answer = Fraction(0,1);
 
     // for(int machine = 0; machine < buttons.size(); machine++){
-    for(int machine = 0; machine < 1; machine++){
+    for(int machine = 1; machine < 2; machine++){
         
         Fraction totalPresses = Fraction(0,1);
         for(int jolt : joltages[machine]){
@@ -458,28 +448,37 @@ int main() {
                 maxResult = f;
             }
         }
-        for(int j = 1; j < X[0].size(); j++){
-            for(Fraction t = Fraction(0,1); t.compare(maxResult, "<"); t = t.add(Fraction(1,1))){
-            
-                bool allPos = true;
-                Fraction presses = Fraction(0,1);
-
-                for(int i = 0; i < result.size() && allPos; i++){
-                    result[i] = result[i].add(X[i][j].mult(t));
-                    presses = presses.add(result[i]);
-                    if(result[i].num < 0){
-                        allPos = false;
-                    }
-                }
-
-                if(allPos && presses.compare(totalPresses, "<")){
-                    totalPresses = presses;
-                }
+        
+        if(X[0].size() > 1){
+            for(int j = 1; j < X[0].size(); j++){
+                for(Fraction t = Fraction(0,1); t.compare(maxResult, "<"); t = t.add(Fraction(1,1))){
                 
+                    bool allPos = true;
+                    Fraction presses = Fraction(0,1);
+
+                    for(int i = 0; i < result.size() && allPos; i++){
+                        result[i] = result[i].add(X[i][j].mult(t));
+                        presses = presses.add(result[i]);
+                        if(result[i].num < 0){
+                            allPos = false;
+                        }
+                    }
+
+                    if(allPos && presses.compare(totalPresses, "<")){
+                        totalPresses = presses;
+                    }
+                    
+                }
+            }
+        } else {
+            totalPresses = Fraction(0,1);
+            for(int i = 0; i < X.size(); i++){
+                totalPresses = totalPresses.add(X[i][0]);
             }
         }
         
-        cout << totalPresses.show() << " Presses";
+        
+        cout << "\n" << totalPresses.show() << " Presses";
                 
         answer = answer.add(totalPresses);
     }
