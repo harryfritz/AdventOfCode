@@ -19,6 +19,9 @@ using namespace std;
 class Fraction {
 
     private:
+        int num;
+        int den;
+
         int mdc(int n, int d) const {
             if(n < 0){
                 n = -n;
@@ -62,12 +65,6 @@ class Fraction {
             }
         }
 
-    public:
-        int num;
-        int den;
-
-        Fraction(int n, int d) : num(n), den(d) {}
-
         Fraction add(const Fraction& another) const {
             int newNum = num * another.den + den * another.num;
             int newDen = den * another.den;
@@ -94,14 +91,6 @@ class Fraction {
             int newDen = den * another.num;
 
             return simplify(Fraction(newNum, newDen));
-        }
-
-        string show(){
-            if(den == 1){
-                return to_string(num);
-            } else {
-                return to_string(num) + "/" + to_string(den);
-            }
         }
 
         bool compare(const Fraction& x, const string op) const {
@@ -153,14 +142,99 @@ class Fraction {
             return false;
         }
 
-};
+    public:
+        Fraction(int n, int d) : num(n), den(d) {}
 
+        Fraction() : num(0), den(1) {}
+        
+        int getNum(){
+            return num;
+        }
+        
+        int getDen(){
+            return den;
+        }
+
+        Fraction abs() const {
+            return Fraction(std::abs(num), den);
+        }
+
+        friend std::ostream& operator<< (std::ostream& stream, Fraction& F) {
+            if(F.den == 1){
+                stream << F.num;
+            } else {
+                stream << F.num << "/" << F.den;
+            }
+            return stream;
+        }
+
+        friend Fraction operator+(const Fraction& A, const Fraction& B){
+            return A.add(B);
+        }
+
+        friend Fraction& operator+=(Fraction& A, const Fraction& B){
+            A = A.add(B);
+            return A;
+        }
+
+        friend Fraction operator-(const Fraction& A, const Fraction& B){
+            return A.sub(B);
+        }
+
+        friend Fraction& operator-=(Fraction& A, const Fraction& B){
+            A = A.sub(B);
+            return A;
+        }
+
+        friend Fraction operator*(const Fraction& A, const Fraction& B){
+            return A.mult(B);
+        }
+
+        friend Fraction& operator*=(Fraction& A, const Fraction& B){
+            A = A.mult(B);
+            return A;
+        }
+
+        friend Fraction operator/(const Fraction& A, const Fraction& B){
+            return A.div(B);
+        }
+
+        friend Fraction& operator/=(Fraction& A, const Fraction& B){
+            A = A.div(B);
+            return A;
+        }
+
+        friend bool operator==(const Fraction& A, const Fraction& B){
+            return A.compare(B, "==");
+        }
+
+        friend bool operator!=(const Fraction& A, const Fraction& B){
+            return A.compare(B, "!=");
+        }
+
+        friend bool operator>(const Fraction& A, const Fraction& B){
+            return A.compare(B, ">");
+        }
+
+        friend bool operator<(const Fraction& A, const Fraction& B){
+            return A.compare(B, "<");
+        }
+
+        friend bool operator>=(const Fraction& A, const Fraction& B){
+            return A.compare(B, ">=");
+        }
+
+        friend bool operator<=(const Fraction& A, const Fraction& B){
+            return A.compare(B, "<=");
+        }
+
+};
 
 void printMatrix(string name, vector <vector <Fraction>>& M){
     cout << "\n" << name << ": ";
     for(vector <Fraction> row : M){
         for(Fraction m : row){
-            cout << "\t" << m.show();
+            cout << "\t" << m;
         }
         cout << "\n";
     }
@@ -169,7 +243,7 @@ void printMatrix(string name, vector <vector <Fraction>>& M){
 void printArray(string name, vector <Fraction>& V){
     cout << "\n" << name << ": ";
     for(Fraction m : V){
-        cout << "\t" << m.show();
+        cout << "\t" << m;
     }
 }
 
@@ -210,18 +284,18 @@ vector <vector <Fraction>> replaceColWithArray(vector <vector <Fraction>> M, int
 void addSubTwoRows(vector <Fraction>& row1, vector <Fraction> row2, bool add){
     if(add){
         for(int i = 0; i < row1.size(); i++){
-            row1[i] = row1[i].add(row2[i]);
+            row1[i] += row2[i];
         }
     } else {
         for(int i = 0; i < row1.size(); i++){
-            row1[i] = row1[i].sub(row2[i]);
+            row1[i] -= row2[i];
         }
     }
 }
 
 vector <Fraction> multRowbyConstant(vector <Fraction> row, Fraction k){
     for(int i = 0; i < row.size(); i++){
-        row[i] = row[i].mult(k);
+        row[i] *= k;
     }
     return row;
 }
@@ -243,20 +317,20 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
     for(int col = 0; col < A.size(); col++){
 
         //Make sure A[col][col] = 1
-        for(int i = col + 1; A[col][col].num == 0 && i < A.size(); i++){
-            if(A[i][col].num != 0){
+        for(int i = col + 1; A[col][col] == Fraction(0,1) && i < A.size(); i++){
+            if(A[i][col] != Fraction(0,1)){
                 interchangeRows(A[col], A[i]);
             }
         }
-        for(int i = col + 1; A[col][col].num != A[col][col].den && i < A.size(); i++){
-            if(A[i][col].num == A[i][col].den){
+        for(int i = col + 1; A[col][col] != Fraction(1,1) && i < A.size(); i++){
+            if(A[i][col] == Fraction(1,1)){
                 interchangeRows(A[col], A[i]);
             }
         }
-        if(A[col][col].num == 0){
+        if(A[col][col] == Fraction(0,1)){
             //Pivot!
-        } else if(A[col][col].num != A[col][col].den){
-            A[col] = multRowbyConstant(A[col], Fraction(1,1).div(A[col][col]));
+        } else if(A[col][col] != Fraction(1,1)){
+            A[col] = multRowbyConstant(A[col], Fraction(1,1) / A[col][col]);
         }
         
         if(printSteps){
@@ -266,8 +340,8 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
 
         //Elimination
         for(int i = col + 1; i < A.size(); i++){
-            if(A[i][col].num != 0){
-                addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col].mult(Fraction(-1,1))), true);
+            if(A[i][col] != Fraction(0,1)){
+                addSubTwoRows(A[i], multRowbyConstant(A[col], A[i][col] * Fraction(-1,1)), true);
             }
         }
         
@@ -284,11 +358,11 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         }
         
         bool validPivot = true;
-        if(A[row][col].num == 0){
+        if(A[row][col] == Fraction(0,1)){
             validPivot = false;
         } 
         for(int i = col - 1; i >= 0 && validPivot; i--){
-            if(A[row][i].num != 0){
+            if(A[row][i] != Fraction(0,1)){
                 validPivot = false;
             } 
         }        
@@ -296,8 +370,8 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         if(validPivot){
             //Backwards Elimination - UP
             for(int i = row - 1; i >= 0; i--){
-                if(A[i][col].num != 0){
-                    addSubTwoRows(A[i], multRowbyConstant(A[row], A[i][col].mult(Fraction(-1,1))), true);
+                if(A[i][col] != Fraction(0,1)){
+                    addSubTwoRows(A[i], multRowbyConstant(A[row], A[i][col] * Fraction(-1,1)), true);
                 }
             }
         }
@@ -320,7 +394,7 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         int pivotPos = -1;
         
         for(int i = 0; i < A.size() && colPivot; i++){
-            if(A[i][col].num != 0){
+            if(A[i][col] != Fraction(0,1)){
                 if(pivotPos == -1){
                     pivotPos = i;
                 } else {
@@ -348,7 +422,7 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
         X[nonPivots[pivot]][pivot + 1] = Fraction(1,1);
 
         for(int i = 0; i < pivots.size(); i++){
-            X[pivots[i]][pivot + 1] = A[i][nonPivots[pivot]].mult(Fraction(-1,1));
+            X[pivots[i]][pivot + 1] = A[i][nonPivots[pivot]] * Fraction(-1,1);
         }
 
     }
@@ -356,6 +430,22 @@ vector <vector <Fraction>> gaussEliminationSolve(vector <vector <Fraction>> A, v
     if(printSteps) printMatrix("X", X);
     return X;
 
+}
+
+vector <vector <Fraction>> matrixMult(vector <vector <Fraction>>& A, vector <vector <Fraction>>& B){
+    vector <Fraction> cols(B[0].size(), Fraction(0,1));
+    vector <vector <Fraction>> result(A.size(), cols);
+    if(A[0].size() == B.size()){
+        for(int row = 0; row < result.size(); row++){
+            for(int col = 0; col < result[col].size(); col++){
+                for(int i = 0; i < B.size(); i++){
+                    result[row][col] += A[row][i] * B[i][col];
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 int main() {
@@ -403,11 +493,11 @@ int main() {
     // for(int machine = 0; machine < buttons.size(); machine++){
     for(int machine = 1; machine < 2; machine++){
         
-        Fraction totalPresses = Fraction(0,1);
+        Fraction maxPresses = Fraction(0,1);
         for(int jolt : joltages[machine]){
-            totalPresses.num += jolt;
+            maxPresses += Fraction(jolt,1);
         }
-        cout << "\n\nMachine " << machine << " - MaxPresses: " << totalPresses.show();        
+        cout << "\n\nMachine " << machine << " - MaxPresses: " << maxPresses;        
 
         //Case Example Machine 2
         while(buttons[machine].size() < buttons[machine][0].size()){
@@ -437,6 +527,22 @@ int main() {
         X = gaussEliminationSolve(btnCombF, joltagesF);
         printMatrix("X", X);
 
+        int maxDen = 1;
+        for(int i = 0; i < X.size(); i++){
+            for(int j = 0; j < X[i].size(); j++){
+                if(X[i][j].getDen() > maxDen){
+                    maxDen = X[i][j].getDen();
+                }
+            }
+        }
+
+        for(int i = 0; i < X.size(); i++){
+            for(int j = 0; j < X[i].size(); j++){
+                X[i][j] *= Fraction(maxDen,1);
+            }
+        }
+        printMatrix("X", X);
+        
         vector <Fraction> result;
         for(int i = 0; i < X.size(); i++){
             result.push_back(X[i][0]);
@@ -444,46 +550,55 @@ int main() {
         
         Fraction maxResult = Fraction(0,1);
         for(Fraction f : result){
-            if(f.compare(maxResult, ">")){
-                maxResult = f;
+            if(f.abs() > maxResult){
+                maxResult = f.abs();
             }
         }
         
+        Fraction totalPresses = Fraction(0,1);
         if(X[0].size() > 1){
+            
             for(int j = 1; j < X[0].size(); j++){
-                for(Fraction t = Fraction(0,1); t.compare(maxResult, "<"); t = t.add(Fraction(1,1))){
                 
-                    bool allPos = true;
-                    Fraction presses = Fraction(0,1);
+                Fraction presses = maxPresses;
+                for(Fraction t = Fraction(0,1); t < maxResult; t += Fraction(1,1)){
+                
+                    vector <Fraction> partResult(X.size());
 
-                    for(int i = 0; i < result.size() && allPos; i++){
-                        result[i] = result[i].add(X[i][j].mult(t));
-                        presses = presses.add(result[i]);
-                        if(result[i].num < 0){
-                            allPos = false;
+                    bool tValid = true;
+                    for(int i = 0; i < partResult.size() && tValid; i++){
+                        partResult[i] += X[i][0] + X[i][j] * t;
+                        if(partResult[i] < Fraction(0,1) || partResult[i].getNum() % maxDen != 0){
+                            tValid = false;
                         }
                     }
 
-                    if(allPos && presses.compare(totalPresses, "<")){
-                        totalPresses = presses;
+                    if(tValid){
+                        Fraction tPresses(0,1);
+                        for(Fraction x : partResult){
+                            x /= Fraction(maxDen,1);
+                            tPresses += x;
+                        }
+                        if(tPresses < presses){
+                            presses = tPresses;
+                        }
                     }
                     
                 }
+                totalPresses += presses;
             }
         } else {
-            totalPresses = Fraction(0,1);
             for(int i = 0; i < X.size(); i++){
-                totalPresses = totalPresses.add(X[i][0]);
+                totalPresses += X[i][0];
             }
         }
         
+        cout << "\n" << totalPresses << " Presses";
+        answer += totalPresses;
         
-        cout << "\n" << totalPresses.show() << " Presses";
-                
-        answer = answer.add(totalPresses);
     }
     
-    cout << "\n\nAnswer: " << answer.show();
+    cout << "\n\nAnswer: " << answer;
     
     
     file.close();
