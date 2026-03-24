@@ -18,6 +18,8 @@ using namespace std;
 
 #define INF 1000000
 
+vector <vector <vector <int>>> allCombinations;
+
 void combinationUtil(vector <vector <int>>& buttons, int ind, int r, 
                         vector <vector <vector <int>>>& combinations, vector <vector <int>>& dataArr) {
     int n = buttons.size();
@@ -52,30 +54,34 @@ vector <string> split(const string& text, char delim) {
     return tokens;
 }
 
-int minBtnPresses(vector <vector <int>>& buttons, vector <int>& joltages) {
+int minBtnPresses(vector <int>& joltages) {
 
     bool zero = true;
     for(int i = 0; i < joltages.size() && zero; i++) {
-        if(joltages[i] != 0) {
+        if(joltages[i] < 0) {
+            return INF;
+        } else if(joltages[i] != 0) {
             zero = false;
         }
     }
     if(zero) {
         return 0;
     }
+    
+    // int globalMultiplier = 1;
+    // bool _allEven = true;
+    // while(_allEven) {
+    //     for(int j : joltages)if(j%2==1) _allEven = false;
+    //     if(_allEven){
+    //         for(int i = 0; i < joltages.size(); i++) joltages[i] /= 2;
+    //         globalMultiplier *= 2;
+    //     }
+    // }
 
-    vector <int> btnPresses;
-    vector <vector <vector <int>>> allCombinations;
+    // Com globalMultiplier: Erro linhas 76 e 149
+    // Sem globalMultiplier: Erro linhas 24 e 168
 
-    // Populate allCombinations with every possible button combination from 1 to buttons.size()
-    for(int i = 1; i <= buttons.size(); i++) {
-        vector <vector <vector <int>>> combinations;
-        vector <vector <int>> dataArr;
-        combinationUtil(buttons, 0, i, combinations, dataArr);
-        for(vector <vector <int>> combination : combinations) {
-            allCombinations.push_back(combination);
-        }
-    }
+    int minPresses = INF;
 
     // Goes through every combination checking which patterns match joltages
     for(int btnComb = 0; btnComb < allCombinations.size(); btnComb++) {
@@ -98,44 +104,68 @@ int minBtnPresses(vector <vector <int>>& buttons, vector <int>& joltages) {
 
         if(validComb){
             vector <int> joltagesCache = joltages;
-            for(int i = 0; i < joltagesCache.size(); i++) {
-                joltagesCache[i] -= pattern[i];
-                joltagesCache[i] /= 2;
-                if(joltagesCache[i] < 0) {
-                    validComb = false;
-                }
-            }
-
-            if(validComb) {
-                int min = minBtnPresses(buttons, joltagesCache);
-                if(min != -1){
-                    btnPresses.push_back(2*min + allCombinations[btnComb].size());
-                }
-            }
+            int multiplier = 1;
             
+            for(int i = 0; i < joltagesCache.size(); i++) joltagesCache[i] -= pattern[i];
+
+            bool allEven = true, allZero = false;
+            while(allEven && !allZero){
+                for(int i = 0; i < joltagesCache.size(); i++) joltagesCache[i] /= 2;
+                multiplier = multiplier*2;
+                
+                allZero = true;
+                for(int j : joltagesCache) {
+                    if(j%2==1) {
+                        allEven = false;
+                        allZero = false;
+                    } else if(j!=0) {
+                        allZero = false;
+                    }
+                } 
+            }  
+
+            int min = multiplier*minBtnPresses(joltagesCache) + allCombinations[btnComb].size();
+            if(min < minPresses){
+                minPresses = min;
+            }
+
         }
 
     }
+
+    bool _allEven = true;
+    for(int j : joltages)if(j%2==1) _allEven = false;
     
-    if(btnPresses.size() == 0) {
-        return -1;
-    } else {
-        int minPresses = btnPresses[0];
-        for(int presses : btnPresses) {
-            if(presses < minPresses) {
-                minPresses = presses;
+    
+    if(minPresses == INF && _allEven){
+        int globalMultiplier = 1;
+        while(_allEven) {
+            for(int j : joltages)if(j%2==1) _allEven = false;
+            if(_allEven){
+                for(int i = 0; i < joltages.size(); i++) joltages[i] /= 2;
+                globalMultiplier *= 2;
             }
         }
-        return minPresses;
+        
+        int min = globalMultiplier*minBtnPresses(joltages);
+        if(min < minPresses){
+            minPresses = min;
+        }
     }
+
+    // return globalMultiplier * minPresses;
+    return minPresses;
     
 }
 
 int main() {
   
     ifstream file;
-    file.open("example.txt");
+    file.open("input.txt");
     string input;
+
+    ofstream output("output.txt");
+    output << "My Solution\n";
 
     vector <int> joltages;
     vector <vector <int>> buttons;
@@ -171,10 +201,23 @@ int main() {
             buttons.push_back(button);
         }
 
-        if(line == 2) {
-            int presses = minBtnPresses(buttons, joltages);
+        if(line == 26) {
+            
+            // Populate allCombinations with every possible button combination from 1 to buttons.size()
+            allCombinations.clear();
+            for(int i = 1; i <= buttons.size(); i++) {
+                vector <vector <vector <int>>> combinations;
+                vector <vector <int>> dataArr;
+                combinationUtil(buttons, 0, i, combinations, dataArr);
+                for(vector <vector <int>> combination : combinations) {
+                    allCombinations.push_back(combination);
+                }
+            }
+            
+            int presses = minBtnPresses(joltages);
             answer += presses;
             cout << "\nLine " << line << " - " << presses << " Presses";
+             output << "\n" << presses;
         }
  
     }
@@ -182,6 +225,7 @@ int main() {
     
     
     cout << "\n\nAnswer: " << answer;
+    output << "\n\nAnswer: " << answer;
     
     
     file.close();
