@@ -23,6 +23,25 @@ class Graph {
     private:
         map <string, list<string>> adjList; // Adjacency list to store the graph
 
+        void dfs(string node, string dest, map<string, bool> &visited, int &count){
+
+            if(node == dest) {
+                count++;
+                return;
+            }
+
+            visited.at(node) = true;
+
+            for(string neighbor : adjList.at(node)) {
+                if(!visited.at(neighbor)) {
+                    dfs(neighbor, dest, visited, count);
+                }
+            }
+
+            visited.at(node) = false;
+
+        }
+
     public:
         void add_edge(string u, string v) {
             adjList[u].push_back(v);
@@ -55,24 +74,6 @@ class Graph {
             return count;
         }
 
-        void dfs(string node, string dest, map<string, bool> &visited, int &count){
-
-            if(node == dest) {
-                count++;
-                return;
-            }
-
-            visited.at(node) = true;
-
-            for(string neighbor : adjList.at(node)) {
-                if(!visited.at(neighbor)) {
-                    dfs(neighbor, dest, visited, count);
-                }
-            }
-
-            visited.at(node) = false;
-
-        }
 };
 
 vector <string> split(const string& text, char delim) {
