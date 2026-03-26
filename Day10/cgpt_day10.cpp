@@ -180,6 +180,9 @@ int main() {
     string line;
     vector<string> lines;
 
+    ofstream output("output.txt");
+    output << "CHatGPT Solution\n";
+
     while (getline(file, line)) {
         if (!line.empty())
             lines.push_back(line);
@@ -193,10 +196,13 @@ int main() {
         
         fillPatternsAndCombos();
         
-        result += search();
+        int presses = search();
+        result += presses;
+        output << "\n" << presses;
     }
 
     cout << "the answer is " << result << "\n";
+    output << "the answer is " << result << "\n";
 
     return 0;
 }
