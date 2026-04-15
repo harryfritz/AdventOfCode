@@ -36,28 +36,30 @@ char rotateGuard(char guard) {
     if(guard == '<') return '^';
 }
 
-int main() {
-  
-    ifstream file;
-    file.open("input.txt");
-    string input;
-
-    vector <string> map;
-    int guardX = 0;
-    int guardY = 0;
-    while(getline(file, input)) {
-        cout << "\n" << input;
-        map.push_back(input);
-        for(int c = 0; c < input.size(); c++) {
-            if(input[c] == '^'){
-                guardX = c;
-                guardY = map.size() - 1;
-            } 
-        }    
+char guardTrail(char guard) {
+    if(guard == '^' || guard == 'v') {
+        return 'V';
+    } else if(guard == '>' || guard == '<') {
+        return 'H';
     }
     
+    return 'X';
+}
+
+bool guardPath(vector <string>& map) {
+    int guardX, guardY;
+    for(int s = 0; s < map.size(); s++) {
+        for(int c = 0; c < map[s].size(); c++) {
+            if(map[s][c] == '^'){
+                guardX = c;
+                guardY = s;
+            } 
+        }
+    }
+
     bool exit = false;
-    while(!exit) {
+    bool loop = false;
+    while(!exit && !loop) {
         int nextX = guardX;
         int nextY = guardY;
         if(map[guardY][guardX] == '^') {            
@@ -72,29 +74,82 @@ int main() {
 
         if(nextX < 0 || nextX >= map[0].size() || nextY < 0 || nextY >= map.size()) {
             exit = true;
-            map[guardY][guardX] = 'X';
+            map[guardY][guardX] = guardTrail(map[guardY][guardX]);
         } else {
-            if(map[nextY][nextX] == '.' || map[nextY][nextX] == 'X') {
+            if(map[nextY][nextX] == '.') {
                 map[nextY][nextX] = map[guardY][guardX];
-                map[guardY][guardX] = 'X';
+                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
                 guardX = nextX;
                 guardY = nextY;
-            } else if(map[nextY][nextX] == '#') {
+            } else if(map[nextY][nextX] == 'V') {
+                map[nextY][nextX] = map[guardY][guardX];
+                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
+                if(map[guardY][guardX] == 'V') loop = true;
+                guardX = nextX;
+                guardY = nextY;
+            } else if(map[nextY][nextX] == 'H') {
+                map[nextY][nextX] = map[guardY][guardX];
+                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
+                if(map[guardY][guardX] == 'H') loop = true;
+                guardX = nextX;
+                guardY = nextY;
+            } else if(map[nextY][nextX] == '#' || map[nextY][nextX] == 'O') {
                 map[guardY][guardX] = rotateGuard(map[guardY][guardX]);
             }
         }
 
     }
+   
+    return loop;
+}
 
-    long long answer = 0; 
+int main() {
+  
+    ifstream file;
+    file.open("input.txt");
+    string input;
 
-    cout << "\n";
-    for(string s : map){
-        cout << "\n" << s;
-        for(char c : s) {
-            if(c == 'X') answer++;
+    vector <string> clearMap;
+    while(getline(file, input)) {
+        // cout << "\n" << input;
+        clearMap.push_back(input);   
+    }
+
+    int OGguardX, OGguardY;
+    for(int s = 0; s < clearMap.size(); s++) {
+        for(int c = 0; c < clearMap[s].size(); c++) {
+            if(clearMap[s][c] == '^'){
+                OGguardX = c;
+                OGguardY = s;
+            } 
         }
     }
+
+    vector <string> noLoopMap = clearMap;
+    guardPath(noLoopMap);
+    
+    long long answer = 0;
+    for(int i = 0; i < noLoopMap.size(); i++) {
+        for(int j = 0; j < noLoopMap[i].size(); j++) {
+            if(noLoopMap[i][j] == 'H' || noLoopMap[i][j] == 'V') {
+                if(!(i == OGguardY && j == OGguardX)) {
+                    vector <string> map = clearMap;
+                    map[i][j] = 'O';
+                    if(guardPath(map)) {
+                        answer++;
+                    }  
+                }
+            }
+        }
+    }
+    
+    // cout << "\n";
+    // for(string s : map){
+    //     cout << "\n" << s;
+    //     for(char c : s) {
+    //         if(c == 'X') answer++;
+    //     }
+    // }
 
     cout << "\n\nAnswer: " << answer;
 
