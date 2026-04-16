@@ -15,35 +15,21 @@
 
 using namespace std;
 
-vector <string> split(const string& text, char delim) {
-    vector <string> tokens;
-    int nextDelim = 0, cursor = 0;
-    while(nextDelim >= 0) {
-        nextDelim = text.find(delim, cursor + 1);
-        tokens.push_back(text.substr(cursor, nextDelim - cursor));
-        if(nextDelim >= 0) {
-            cursor = nextDelim;
-            while(text[cursor] == delim) cursor++;
-        }
-    }
-    return tokens;
-}
-
 char rotateGuard(char guard) {
     if(guard == '^') return '>';
     if(guard == '>') return 'v';
     if(guard == 'v') return '<';
     if(guard == '<') return '^';
+    return '^';
 }
 
+// 1=up, 2=right, 3=down, 4=left
 char guardTrail(char guard) {
-    if(guard == '^' || guard == 'v') {
-        return 'V';
-    } else if(guard == '>' || guard == '<') {
-        return 'H';
-    }
-    
-    return 'X';
+    if(guard == '^') return '1';
+    if(guard == '>') return '2';
+    if(guard == 'v') return '3';
+    if(guard == '<') return '4';
+    return '1';
 }
 
 bool guardPath(vector <string>& map) {
@@ -76,25 +62,21 @@ bool guardPath(vector <string>& map) {
             exit = true;
             map[guardY][guardX] = guardTrail(map[guardY][guardX]);
         } else {
-            if(map[nextY][nextX] == '.') {
+            if(map[nextY][nextX] == '.' || map[nextY][nextX] >= '1' && map[nextY][nextX] <= '4') {
                 map[nextY][nextX] = map[guardY][guardX];
-                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
-                guardX = nextX;
-                guardY = nextY;
-            } else if(map[nextY][nextX] == 'V') {
-                map[nextY][nextX] = map[guardY][guardX];
-                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
-                if(map[guardY][guardX] == 'V') loop = true;
-                guardX = nextX;
-                guardY = nextY;
-            } else if(map[nextY][nextX] == 'H') {
-                map[nextY][nextX] = map[guardY][guardX];
-                map[guardY][guardX] = guardTrail(map[guardY][guardX]);
-                if(map[guardY][guardX] == 'H') loop = true;
+                map[guardY][guardX] = guardTrail(map[guardY][guardX]); 
                 guardX = nextX;
                 guardY = nextY;
             } else if(map[nextY][nextX] == '#' || map[nextY][nextX] == 'O') {
                 map[guardY][guardX] = rotateGuard(map[guardY][guardX]);
+                map[nextY][nextX] = '5';
+            } else if(map[nextY][nextX] >= '5') {
+                map[guardY][guardX] = rotateGuard(map[guardY][guardX]);
+                map[nextY][nextX]++;
+                if(map[nextY][nextX] >= '9'){
+                    loop = true;
+                    map[nextY][nextX] = '9';
+                }
             }
         }
 
@@ -131,7 +113,7 @@ int main() {
     long long answer = 0;
     for(int i = 0; i < noLoopMap.size(); i++) {
         for(int j = 0; j < noLoopMap[i].size(); j++) {
-            if(noLoopMap[i][j] == 'H' || noLoopMap[i][j] == 'V') {
+            if(noLoopMap[i][j] >= '1' && noLoopMap[i][j] <= '4') {
                 if(!(i == OGguardY && j == OGguardX)) {
                     vector <string> map = clearMap;
                     map[i][j] = 'O';

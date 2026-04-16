@@ -15,20 +15,6 @@
 
 using namespace std;
 
-vector <string> split(const string& text, char delim) {
-    vector <string> tokens;
-    int nextDelim = 0, cursor = 0;
-    while(nextDelim >= 0) {
-        nextDelim = text.find(delim, cursor + 1);
-        tokens.push_back(text.substr(cursor, nextDelim - cursor));
-        if(nextDelim >= 0) {
-            cursor = nextDelim;
-            while(text[cursor] == delim) cursor++;
-        }
-    }
-    return tokens;
-}
-
 char rotateGuard(char guard) {
     if(guard == '^') return '>';
     if(guard == '>') return 'v';
