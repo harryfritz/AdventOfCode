@@ -16,13 +16,6 @@
 
 using namespace std;
 
-bool cointainsPair(vector <vector <int>> &trailHead, const vector <int> &pair){
-    for(vector <int> pairs : trailHead){
-        if(pairs == pair) return true;
-    }
-    return false;
-}
-
 void followPaths(vector <vector <int>>& map, int row, int col, int height, int& ratings) {
     if(height == 9) {
         ratings++;
@@ -70,7 +63,6 @@ int main() {
     }
 
     cout << "\n";
-    long long answer = 0;
     int ratings = 0; 
     for(int i = 0; i < map.size(); i++){
         for(int j = 0; j < map[i].size(); j++) {
