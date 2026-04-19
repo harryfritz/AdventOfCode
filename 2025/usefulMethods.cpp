@@ -24,6 +24,11 @@ int digits(int id){
     return digits;
 }
 
+int digits(int number) {
+    if(number < 10) return 1;
+    return 1 + digits(number/10);
+}
+
 // Returns the transposed of a matrix of Integers
 vector <vector <int>> transpose(vector <vector <int>>& M){
     
