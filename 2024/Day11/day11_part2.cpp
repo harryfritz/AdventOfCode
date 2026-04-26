@@ -33,16 +33,13 @@ int digits(long long number) {
     return 1 + digits(number/10);
 }
 
-vector <long long> splitEvenInteger(long long number) {
+long long evenIntegerDivider(long long number) {
     long long divider = 1;
     int halfDigits = digits(number) / 2;
     for(int i = 0; i < halfDigits; i++) {
         divider *= 10;
     }
-    vector <long long> result;
-    result.push_back(number/divider);
-    result.push_back(number%divider);
-    return result;
+    return divider;
 }
 
 int main() {
@@ -57,26 +54,24 @@ int main() {
         // cout << "\n" << input;
 
         for(string s : split(input, ' ')) {
-            stones.push_back(stoi(s));
+            stones.push_back(stoll(s));
         }
     
     }
 
     vector <long long> newStones;
-    for(int blink = 0; blink < 25; blink++) {
-        // cout << "\n";
-        // for(long long stone : stones) cout << stone << " ";
-        
+    for(int blink = 0; blink < 75; blink++) {
         newStones.clear();
         for(long long stone = 0; stone < stones.size(); stone++) {
-            if(stones[stone] == 0) {
+            long long stoneValue = stones[stone];
+            if(stoneValue == 0) {
                 newStones.push_back(1);
-            } else if(digits(stones[stone])%2 == 0) {
-                vector <long long> splitStones = splitEvenInteger(stones[stone]);
-                newStones.push_back(splitStones[0]);
-                newStones.push_back(splitStones[1]);
+            } else if(digits(stoneValue)%2 == 0) {
+                long long divider = evenIntegerDivider(stoneValue);
+                newStones.push_back(stoneValue/divider);
+                newStones.push_back(stoneValue%divider);
             } else {
-               newStones.push_back(stones[stone]*2024);
+               newStones.push_back(stoneValue*2024);
             }
             
         }
